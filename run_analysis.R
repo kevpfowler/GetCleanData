@@ -25,7 +25,7 @@
 ## Required libraries
 library(dplyr)
 
-## combine_har_datasets:
+## combine_har_datasets(type):
 ##   - Combines three related files (type = train or test) into a single data frame
 ##   - Returns the single combined data frame
 combine_har_datasets <- function(type) {
@@ -57,10 +57,10 @@ combine_har_datasets <- function(type) {
     return(ttbl)
 }
 
-## convert_har_colnames:
+## convert_har_colnames(DF):
 ##   - Convert measurement variable names in the merged data frame to 
 ##     more descriptive/readable names
-##   - Returns the converted data frane
+##   - Returns the converted data frame
 convert_har_colnames <- function(DF) {
     DF <- DF %>% 
         # Remove the repeated word typo: BodyBody -> Body
@@ -152,7 +152,7 @@ mean_har_columns <- function(DF) {
 }
 
 ## ------------------------------------------------------------------------
-## These is the main part of the script"
+## This is the main part of the script"
 ##
 ## Produce the tidy dataset (Steps 1 - 4)
 tidy_df <- clean_har_data()

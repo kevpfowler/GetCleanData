@@ -1,16 +1,27 @@
 ---
 title: "Get-Clean-Data Project Codebook"
 author: "Kevin Fowler"
-date: "August 19, 2015"
-output: html_document
+date: "August 21, 2015"
+output:
+    html_document:
+        toc: true
 ---
 
 ## Project Description
 The purpose of this project was to produce a tidy dataset from a real-world
-example (messy) dataset, and then to perform a simple analysis step on the tidy data variables within a number of groups. The original dataset is a 
-
->"Human Activity Recognition database built from the recordings of 30 subjects performing activities of daily living (ADL) while carrying a waist-mounted smartphone with embedded inertial sensors."
-
+example (messy) dataset, and then to perform a simple analysis step on the tidy data variables within a number of groups. The original dataset is from a wearables technology study:
+```
+"Human Activity Recognition database built from the recordings of 30 subjects performing activities of daily living (ADL) while carrying a waist-mounted smartphone with embedded inertial sensors."
+```
+The required steps in this project are:
+```
+You should create one R script called run_analysis.R that does the following. 
+1. Merges the training and the test sets to create one data set.
+2. Extracts only the measurements on the mean and standard deviation for each measurement.
+3. Uses descriptive activity names to name the activities in the data set
+4. Appropriately labels the data set with descriptive variable names. 
+5. From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+```
 ##Study design and data processing
 The Human Activity Recognition study and data set is described at:
 
@@ -22,8 +33,7 @@ The original data is located at:
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
 
 The zip file is downloaded to the local working directory and unzipped, which results in 
-the subdirectory *"UCI HAR Dataset"*. The R script developed to tidy and analyze
-the data assumes this directory is present in the R working directory.
+the subdirectory *"UCI HAR Dataset"*. 
 
 ###Notes on the original (raw) data 
 The raw data in the *UCI HAR Dataset* is spread over multiple files. The 
@@ -62,35 +72,79 @@ The other raw files needed for this project are in the top-level *UCR HAR Datase
 By executing the provided R script on the raw data directory described above, two tidy datasets and datafiles are produced. The instructions for executing the script are provided next.
 
 ###Guide to create the tidy data files
-1. Clone the GitHub repo to some directory. This contains the R-script run_analysis.R, and the README.md and Codebook.md files.
-2. Make the cloned repo directory the working R directory using setwd() from the R console
+1. Fork the GitHub repo https://github.com/kevpfowler/GetCleanData to your own GitHub account
+2. Clone the forked repo to some local directory. This contains the R-script run_analysis.R, and the README.md and Codebook.md files.
+3. Make the cloned repo directory the working R directory using setwd() from the R console
 ```
-    > setwd("%YourBaseDir%/GetCleanData")
+   > setwd("%YourBaseDir%/GetCleanData")
 ```
-3. Download the raw data directory by clicking on the following link and save the zip file to the working R directory
+4. Download the raw data directory by clicking on the following link and save the zip file to the working R directory
     * https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
-4. Unzip the compressed file  getdata-projectfiles-UCI HAR Dataset.zip using the appropriate tools for your system/. The *UCI Har Dataset* should now be a subdirectory of the working R directory.
-5. At the R console, source the run_analysis.R script:
-
+5. Unzip the compressed file  getdata-projectfiles-UCI HAR Dataset.zip using the appropriate tools for your system. The *UCI Har Dataset* should now be a subdirectory of the working R directory.
+6. At the R console, source the run_analysis.R script:
 ```
-    > source("run_analysis.R")
+   > source("run_analysis.R")
 ```    
 
-###Cleaning of the data
-Short, high-level description of what the cleaning script does. [link to the readme document that describes the code in greater detail]()
+This script will produce two data.frame objects and two .txt datafiles:
 
-Produces two data sets:
+* tidy_df object and tidy_har_data.txt: The results of Steps 1-4 of the project. This has 10299 observations(rows) and 68 variables(columns).
 
-+ tidy_data.txt: The results of Steps 1-4 of the project. This has 10299 observations(rows) and 68 variables(columns).
-
-+ mean_data.txt: The results of Step5 of the project, where the mean is 
-calculated for each numeric variable over each subject-activity subgroup. This
+* mean_df object and mean_har_data.txt: The results of Step 5 of the project, where the mean is calculated for each numeric variable over each subject-activity subgroup. This
 has 180 observations(rows) corresponding to the (30 subjects)x(6 activities) dimension, and 68 variables(columns)
 
 The column names for both data sets are the same. It is implied (without eplicitly renaming the variable column names) that the mean of each numeric variable has been calculated in the summary data set.
 
+###Cleaning of the data
+The run_analysis.R script was developed to produce the tidy data sets as described in the Project Steps 1-5. The processing was completely done using only the dplyr and base libraries. 
+
+The run_analysis.R script contains several functions
+
+* clean_har_data():
+    + Main workhorse cleaning up the data per Steps 1-4. 
+    + Calls the combine_har_datasets() function for each of *train* and *test* 
+    + Binds the combined *train* and *test* data frames into one 
+    + Chains several functions to clean/tidy the dataframe, including:
+        + arrange(), select(), mutate() dplyr functions
+        + convert_har_columns() function to rename the columns
+    + Returns the cleaned/tidy data.table
+
+* combine_har_datasets(type):
+    + **type** = *train* or *test*
+    + Combines into a single data frame the following three related files:
+        + X_***type***.txt
+        + subject_***type***.txt
+        + y_***type***.txt
+    + Returns the single combined data frame
+
+* convert_har_colnames(DF):
+    + Convert measurement variable names in the merged data frame to more descriptive/readable names
+    + Uses chained set of setNames(gsub(..)) function calls
+    + Returns the converted data frame
+
+* mean_har_columns(DF):
+    * This does the Step 5 analysis of the previously cleaned/tidied dataset. 
+    * Calcs the mean of every measurement column for each group of subject/activity
+        + Uses chained group_by() and summarize() function calls
+    * Returns the by-group mean-summary data table.
+        + This is in wide form, which makes more sense to me in the absence of any additional analysis needs.
+
+The "main" part of the R script is then simply the following:
+```
+## Produce the tidy dataset (Steps 1 - 4)
+tidy_df <- clean_har_data()
+    
+## Do the grouped column means (Step 5)
+mean_df <- mean_har_columns(tidy_df)
+
+## Write both datasets to txt files
+write.table(tidy_df, "tidy_har_data.txt", row.names=FALSE)
+write.table(mean_df, "mean_har_data.txt", row.names= FALSE)
+```
+The reasoning behind the run_analysis.R script and the libraries/functions used are described in detail in the [README.md](README.md) file.
+
 ##Description of the variables in the output files
-As described above the run_analysis.R script produces two data sets and writes
+As described above, the run_analysis.R script produces two data sets and writes
 them to txt files. Both have the same variable names (column names):
 
 The first two columns are the experiment **factors**:
