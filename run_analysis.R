@@ -51,7 +51,9 @@ combine_har_datasets <- function(type) {
     stbl <- read.table(sdata, col.names = "subject")
     atbl <- read.table(adata, col.names = "activity")
     
-    ## Combine the three tables
+    ## Combine the three tables. Each table has its own unique columns
+    ## but the same number of rows, and the rows are already ordered to
+    ## line up among the three. So just cbind them together!
     ttbl <- cbind(stbl, atbl, ttbl) 
     
     return(ttbl)
